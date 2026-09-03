@@ -79,7 +79,7 @@ function AuditPage() {
               />
               <div className="flex flex-wrap items-center gap-2">
                 <span className="num text-xs text-muted-foreground">{formatTime(e.at)} IST</span>
-                <Badge tone={outcomeTone[e.outcome]}>{e.event}</Badge>
+                <Badge tone={outcomeTone[e.outcome] ?? "neutral"}>{e.event}</Badge>
                 <span className="text-xs text-muted-foreground">by {e.actor}</span>
                 <Link
                   to="/incidents/$incidentId"
