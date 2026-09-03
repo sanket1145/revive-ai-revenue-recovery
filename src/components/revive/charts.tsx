@@ -47,7 +47,7 @@ export function RevenueTrendChart() {
         <XAxis dataKey="time" {...axis} />
         <YAxis {...axis} />
         <Tooltip {...tooltipStyle} formatter={(v: number) => [`₹${v} L`, ""]} />
-        <Area
+        <Area isAnimationActive={false}
           type="monotone"
           dataKey="baseline"
           stroke="var(--muted-foreground)"
@@ -56,7 +56,7 @@ export function RevenueTrendChart() {
           strokeWidth={1.5}
           name="Baseline"
         />
-        <Area
+        <Area isAnimationActive={false}
           type="monotone"
           dataKey="revenue"
           stroke="var(--chart-1)"
@@ -83,7 +83,7 @@ export function SuccessRateChart() {
           strokeDasharray="4 4"
           label={{ value: "SLA floor", fill: "var(--destructive)", fontSize: 10, position: "insideTopRight" }}
         />
-        <Line
+        <Line isAnimationActive={false}
           type="monotone"
           dataKey="sr"
           stroke="var(--chart-1)"
@@ -108,7 +108,7 @@ export function RiskByIncidentChart() {
         <XAxis type="number" {...axis} />
         <YAxis type="category" dataKey="id" width={72} {...axis} />
         <Tooltip {...tooltipStyle} formatter={(v: number) => [`₹${v} L at risk`, ""]} />
-        <Bar dataKey="risk" radius={[0, 4, 4, 0]} barSize={18}>
+        <Bar isAnimationActive={false} dataKey="risk" radius={[0, 4, 4, 0]} barSize={18}>
           {riskByIncident.map((entry) => (
             <Cell
               key={entry.id}
@@ -128,7 +128,7 @@ export function Sparkline({ data }: { data: { t: string; sr: number }[] }) {
         <XAxis dataKey="t" {...axis} />
         <YAxis domain={[0, 100]} {...axis} />
         <Tooltip {...tooltipStyle} formatter={(v: number) => [`${v}%`, "Success rate"]} />
-        <Line
+        <Line isAnimationActive={false}
           type="monotone"
           dataKey="sr"
           stroke="var(--chart-2)"
