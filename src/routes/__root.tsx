@@ -77,14 +77,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "REVIVE AI — Revenue Incident Commander" },
+      {
+        name: "description",
+        content:
+          "Merchant revenue incident command centre: deterministic degradation detection, revenue-at-risk quantification and policy-bounded recovery.",
+      },
+      { name: "author", content: "REVIVE AI" },
+      { property: "og:site_name", content: "REVIVE AI" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {

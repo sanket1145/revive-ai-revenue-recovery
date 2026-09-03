@@ -10,6 +10,8 @@ import {
   Radio,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatCount } from "@/lib/revive/format";
+import type { SystemMeta } from "@/lib/revive/types";
 
 const nav = [
   { to: "/", label: "Overview", icon: LayoutDashboard },
@@ -21,10 +23,13 @@ const nav = [
 export function AppShell({
   title,
   subtitle,
+  meta,
   children,
 }: {
   title: string;
   subtitle?: string;
+  /** Dataset/system metadata; omitted while a route is still loading. */
+  meta?: SystemMeta | null;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -68,11 +73,18 @@ export function AppShell({
 
         <div className="absolute inset-x-4 bottom-5 rounded-md border border-border bg-elevated p-3">
           <div className="flex items-center gap-2 text-xs font-medium">
-            <Radio className="size-3.5 text-success" />
-            Detection engine live
+            <Radio className={cn("size-3.5", meta ? "text-success" : "text-muted-foreground")} />
+            {meta ? "Detection engine online" : "Connecting to data layer"}
           </div>
           <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
-            Streaming 1.2M txn/hr · policy engine v4.2 · autonomous execution disabled
+            {meta ? (
+              <>
+                {formatCount(meta.transactionCount)} payment attempts indexed · rule{" "}
+                <span className="num">{meta.detectionRule}</span> · autonomous execution disabled
+              </>
+            ) : (
+              "Dataset metadata not loaded"
+            )}
           </p>
         </div>
       </aside>
@@ -102,8 +114,13 @@ export function AppShell({
               )}
             </div>
             <div className="hidden items-center gap-2 rounded-md border border-border bg-panel px-3 py-1.5 text-xs text-muted-foreground sm:flex">
-              <span className="size-1.5 rounded-full bg-success" />
-              Merchant: Zolvex Retail · MID 7741208
+              <span
+                className={cn(
+                  "size-1.5 rounded-full",
+                  meta ? "bg-success" : "bg-muted-foreground",
+                )}
+              />
+              {meta ? `Merchant: ${meta.merchantName} · ${meta.merchantId}` : "Merchant: —"}
             </div>
           </div>
         </header>

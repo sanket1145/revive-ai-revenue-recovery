@@ -5,7 +5,7 @@ import type {
   IncidentStatus,
   PolicyStatus,
   Severity,
-} from "@/lib/revive-data";
+} from "@/lib/revive/types";
 
 export function Panel({
   title,
