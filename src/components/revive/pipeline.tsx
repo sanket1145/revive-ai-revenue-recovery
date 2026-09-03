@@ -10,8 +10,15 @@ const stages = [
   "Audit Log",
 ];
 
+/**
+ * AI → Policy → Execution safety rail.
+ *
+ * `activeIndex` marks the last stage that has actually happened. It defaults
+ * to -1 because in Step 1 nothing beyond detection runs: no stage is lit
+ * unless the caller can prove it executed.
+ */
 export function SafetyPipeline({
-  activeIndex = 5,
+  activeIndex = -1,
   blocked = false,
   className,
 }: {
