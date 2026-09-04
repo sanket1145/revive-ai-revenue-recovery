@@ -8,6 +8,7 @@
  */
 import { useState } from "react";
 import { useRouter } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, Loader2, Play, ShieldAlert, ShieldCheck, X } from "lucide-react";
 import { Badge, ExecutionBadge, Panel, PolicyBadge } from "@/components/revive/primitives";
@@ -33,6 +34,7 @@ export function PlaybookPanel({
   investigated: boolean;
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const decide = useServerFn(decideRecoveryAction);
   const execute = useServerFn(executeRecoveryAction);
   const [busy, setBusy] = useState<string | null>(null);
@@ -47,6 +49,7 @@ export function PlaybookPanel({
     try {
       const result = await fn();
       if (!result.ok) setError(result.reason ?? "The action was refused.");
+      await queryClient.invalidateQueries({ queryKey: ["revive"] });
       await router.invalidate();
     } catch (e) {
       setError(e instanceof Error ? e.message : "The action could not be completed.");
