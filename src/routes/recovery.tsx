@@ -195,8 +195,9 @@ function RecoveryPage() {
         <p className="mt-2 max-w-4xl text-xs leading-relaxed text-destructive/90">
           REVIVE holds no credentials to move money, alter pricing, issue refunds or change payment
           routing. Actions that create financial concessions, initiate refunds or debits, or change
-          customer-facing checkout behaviour are permanently outside the AI&rsquo;s authority and
-          will be routed to a human finance owner once the policy engine ships.
+          customer-facing checkout behaviour are permanently outside the AI&rsquo;s authority. The
+          only executable actions are the two bounded ones below, capped at 50 transactions and run
+          in test mode; anything above the exposure ceiling routes to a human approver.
         </p>
       </div>
 
