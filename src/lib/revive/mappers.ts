@@ -5,10 +5,16 @@
  */
 import type {
   AuditEventRecord,
+  EvidencePoint,
+  ExecutionStatus,
   IncidentRecord,
   IncidentReport,
   IncidentStatus,
   OverviewSnapshot,
+  PolicyCheck,
+  PolicyStatus,
+  RecoveryAction,
+  RecoveryScore,
   ScopeType,
   Severity,
   SystemMeta,
@@ -99,6 +105,89 @@ export function mapIncident(row: Row): IncidentRecord {
     rootCause: strOrNull(row["root_cause"]),
     diagnosis: strOrNull(row["diagnosis"]),
     confidence: numOrNull(row["confidence"]),
+    evidence: evidencePoints(row["evidence"]),
+    recoveryScore: numOrNull(row["recovery_score"]),
+    scoreDetail: scoreDetail(row["evidence"]),
+    investigatedAt: strOrNull(row["investigated_at"]),
+  };
+}
+
+function evidencePoints(value: unknown): EvidencePoint[] {
+  const raw = value && typeof value === "object" ? (value as Row)["points"] : null;
+  if (!Array.isArray(raw)) return [];
+  return raw.map((p) => {
+    const r = (p ?? {}) as Row;
+    return { signal: str(r["signal"]), detail: str(r["detail"]) };
+  });
+}
+
+function scoreDetail(value: unknown): RecoveryScore | null {
+  const raw = value && typeof value === "object" ? (value as Row)["score"] : null;
+  if (!raw || typeof raw !== "object") return null;
+  const s = raw as Row;
+  const factors = Array.isArray(s["factors"]) ? (s["factors"] as Row[]) : [];
+  return {
+    score: num(s["score"]),
+    eligibleTransactions: num(s["eligibleTransactions"]),
+    eligiblePaise: num(s["eligiblePaise"]),
+    expectedRecoveryPaise: num(s["expectedRecoveryPaise"]),
+    factors: factors.map((f) => ({
+      label: str(f["label"]),
+      points: num(f["points"]),
+      max: num(f["max"], 100),
+    })),
+  };
+}
+
+const EXEC_STATUSES: ExecutionStatus[] = [
+  "executed",
+  "test_mode",
+  "pending",
+  "rejected",
+  "blocked",
+  "verified",
+];
+const POLICY_STATUSES: PolicyStatus[] = ["approved", "blocked", "requires_approval"];
+
+export function mapRecoveryAction(row: Row): RecoveryAction {
+  const policy = str(row["policy_status"]) as PolicyStatus;
+  const exec = str(row["execution_status"]) as ExecutionStatus;
+  const checks = Array.isArray(row["policy_checks"]) ? (row["policy_checks"] as Row[]) : [];
+  const v = (row["verification"] ?? null) as Row | null;
+
+  return {
+    incidentCode: str(row["incident_code"]),
+    actionKey: str(row["action_key"]),
+    title: str(row["title"]),
+    reason: str(row["reason"]),
+    eligibleTransactions: num(row["eligible_transactions"]),
+    eligiblePaise: num(row["eligible_paise"]),
+    expectedRecoveryPaise: num(row["expected_recovery_paise"]),
+    policyStatus: POLICY_STATUSES.includes(policy) ? policy : "blocked",
+    policyChecks: checks.map((c) => ({
+      check: str(c["check"]),
+      status: (["pass", "warn", "fail"].includes(str(c["status"]))
+        ? str(c["status"])
+        : "warn") as PolicyCheck["status"],
+      detail: str(c["detail"]),
+    })),
+    executionStatus: EXEC_STATUSES.includes(exec) ? exec : "pending",
+    canaryLimit: num(row["canary_limit"], 50),
+    attempted: num(row["attempted"]),
+    recovered: num(row["recovered"]),
+    recoveredPaise: num(row["recovered_paise"]),
+    executedAt: strOrNull(row["executed_at"]),
+    verification: v
+      ? {
+          attempted: num(v["attempted"]),
+          succeeded: num(v["succeeded"]),
+          failed: num(v["failed"]),
+          batchValuePaise: num(v["batchValuePaise"]),
+          recoveredPaise: num(v["recoveredPaise"]),
+          recoveryRatePct: num(v["recoveryRatePct"]),
+          mode: str(v["mode"], "test-mode simulation"),
+        }
+      : null,
   };
 }
 

@@ -143,11 +143,14 @@ export type Database = {
           dominant_failure_share: number | null
           drop_pct: number
           drop_pp: number
+          evidence: Json
           id: string
           incident_code: string
+          investigated_at: string | null
           metric: string
           natural_key: string
           observed_success_rate: number
+          recovery_score: number | null
           resolved_at: string | null
           revenue_at_risk_paise: number
           revenue_recovered_paise: number
@@ -178,11 +181,14 @@ export type Database = {
           dominant_failure_share?: number | null
           drop_pct: number
           drop_pp: number
+          evidence?: Json
           id?: string
           incident_code: string
+          investigated_at?: string | null
           metric?: string
           natural_key: string
           observed_success_rate: number
+          recovery_score?: number | null
           resolved_at?: string | null
           revenue_at_risk_paise?: number
           revenue_recovered_paise?: number
@@ -213,11 +219,14 @@ export type Database = {
           dominant_failure_share?: number | null
           drop_pct?: number
           drop_pp?: number
+          evidence?: Json
           id?: string
           incident_code?: string
+          investigated_at?: string | null
           metric?: string
           natural_key?: string
           observed_success_rate?: number
+          recovery_score?: number | null
           resolved_at?: string | null
           revenue_at_risk_paise?: number
           revenue_recovered_paise?: number
@@ -233,6 +242,75 @@ export type Database = {
           window_end?: string
           window_start?: string
           z_score?: number
+        }
+        Relationships: []
+      }
+      recovery_actions: {
+        Row: {
+          action_key: string
+          attempted: number
+          canary_limit: number
+          created_at: string
+          eligibility: Json
+          eligible_paise: number
+          eligible_transactions: number
+          executed_at: string | null
+          execution_status: string
+          expected_recovery_paise: number
+          id: string
+          incident_code: string
+          policy_checks: Json
+          policy_status: string
+          reason: string
+          recovered: number
+          recovered_paise: number
+          title: string
+          updated_at: string
+          verification: Json | null
+        }
+        Insert: {
+          action_key: string
+          attempted?: number
+          canary_limit?: number
+          created_at?: string
+          eligibility?: Json
+          eligible_paise?: number
+          eligible_transactions?: number
+          executed_at?: string | null
+          execution_status?: string
+          expected_recovery_paise?: number
+          id?: string
+          incident_code: string
+          policy_checks?: Json
+          policy_status?: string
+          reason: string
+          recovered?: number
+          recovered_paise?: number
+          title: string
+          updated_at?: string
+          verification?: Json | null
+        }
+        Update: {
+          action_key?: string
+          attempted?: number
+          canary_limit?: number
+          created_at?: string
+          eligibility?: Json
+          eligible_paise?: number
+          eligible_transactions?: number
+          executed_at?: string | null
+          execution_status?: string
+          expected_recovery_paise?: number
+          id?: string
+          incident_code?: string
+          policy_checks?: Json
+          policy_status?: string
+          reason?: string
+          recovered?: number
+          recovered_paise?: number
+          title?: string
+          updated_at?: string
+          verification?: Json | null
         }
         Relationships: []
       }
@@ -322,6 +400,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      revive_audit: {
+        Args: {
+          p_actor: string
+          p_detail: string
+          p_event: string
+          p_incident: string
+          p_metadata?: Json
+          p_outcome: string
+          p_stage: string
+        }
+        Returns: undefined
+      }
       revive_base_sr: {
         Args: {
           p_amount: number
@@ -337,7 +427,24 @@ export type Database = {
         Returns: number
       }
       revive_build_incident_report: { Args: { p_code: string }; Returns: Json }
+      revive_decide_recovery: {
+        Args: { p_action: string; p_code: string; p_decision: string }
+        Returns: Json
+      }
       revive_detect_incidents: { Args: never; Returns: Json }
+      revive_eligible_txns: {
+        Args: { p_action: string; p_code: string }
+        Returns: {
+          amount_paise: number
+          failure_reason: string
+          propensity: number
+          transaction_id: string
+        }[]
+      }
+      revive_execute_recovery: {
+        Args: { p_action: string; p_code: string }
+        Returns: Json
+      }
       revive_failure_category: { Args: { p_reason: string }; Returns: string }
       revive_generate_dataset: { Args: never; Returns: Json }
       revive_method_label: { Args: { p_method: string }; Returns: string }
@@ -345,8 +452,10 @@ export type Database = {
         Args: { p_key: string; p_values: string[]; p_weights: number[] }
         Returns: string
       }
+      revive_propose_recovery: { Args: { p_code: string }; Returns: Json }
       revive_rand: { Args: { p_key: string }; Returns: number }
       revive_reason_label: { Args: { p_reason: string }; Returns: string }
+      revive_recovery_score: { Args: { p_code: string }; Returns: Json }
       revive_refresh_projections: { Args: never; Returns: Json }
       revive_region: { Args: { p_city: string }; Returns: string }
       revive_response_code: { Args: { p_reason: string }; Returns: string }

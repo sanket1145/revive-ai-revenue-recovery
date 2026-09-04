@@ -2,8 +2,15 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Check, Lock, ShieldAlert } from "lucide-react";
 import { AppShell } from "@/components/revive/shell";
-import { Panel, SeverityBadge, StatusBadge, Badge } from "@/components/revive/primitives";
+import {
+  Panel,
+  PolicyBadge,
+  SeverityBadge,
+  StatusBadge,
+  Badge,
+} from "@/components/revive/primitives";
 import { SafetyPipeline } from "@/components/revive/pipeline";
+import { PlaybookPanel } from "@/components/revive/playbook";
 import {
   DataUnavailable,
   EmptyState,
@@ -61,10 +68,27 @@ function RecoveryPage() {
     );
   }
 
-  const { meta, incidents, auditByIncident } = result.data;
+  const { meta, incidents, actions, auditByIncident } = result.data;
   const open = incidents.filter((i) => i.status !== "recovered");
   const addressable = open.reduce((s, i) => s + i.revenueAtRiskPaise, 0);
   const recovered = incidents.reduce((s, i) => s + i.revenueRecoveredPaise, 0);
+  const executedActions = actions.filter((a) => a.executionStatus === "executed");
+  const anyBlocked = actions.some((a) => a.policyStatus === "blocked");
+  const pipelineStage = executedActions.some((a) => a.verification)
+    ? 5
+    : executedActions.length > 0
+      ? 4
+      : actions.some((a) => a.policyStatus === "approved")
+        ? 2
+        : actions.length > 0
+          ? 1
+          : incidents.some((i) => i.diagnosis)
+            ? 0
+            : -1;
+  const byIncident = new Map<string, typeof actions>();
+  for (const a of actions) {
+    byIncident.set(a.incidentCode, [...(byIncident.get(a.incidentCode) ?? []), a]);
+  }
 
   return (
     <AppShell
@@ -73,7 +97,7 @@ function RecoveryPage() {
       meta={meta}
     >
       <Panel title="Safety workflow">
-        <SafetyPipeline activeIndex={-1} />
+        <SafetyPipeline activeIndex={pipelineStage} blocked={anyBlocked} />
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
           REVIVE AI never executes financial actions directly. Every recommendation is evaluated
           against deterministic policy rules; approved actions run first in bounded test mode, are
@@ -121,15 +145,23 @@ function RecoveryPage() {
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
             Actions proposed
           </p>
-          <p className="num mt-1 text-2xl font-semibold">0</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">recommendation service offline</p>
+          <p className="num mt-1 text-2xl font-semibold">{actions.length}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            across {byIncident.size} investigated incident{byIncident.size === 1 ? "" : "s"}
+          </p>
         </Panel>
         <Panel>
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
             Policy verdicts
           </p>
-          <p className="num mt-1 text-2xl font-semibold">0</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">nothing submitted to the engine</p>
+          <p className="num mt-1 text-2xl font-semibold">
+            {actions.filter((a) => a.policyStatus === "approved").length}
+            <span className="text-sm font-normal text-muted-foreground"> approved</span>
+          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {actions.filter((a) => a.policyStatus === "requires_approval").length} need a human ·{" "}
+            {actions.filter((a) => a.policyStatus === "blocked").length} blocked
+          </p>
         </Panel>
         <Panel>
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
@@ -154,7 +186,11 @@ function RecoveryPage() {
           >
             {formatINR(recovered)}
           </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">no action has been executed</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {executedActions.length === 0
+              ? "no batch has been executed"
+              : `${executedActions.length} verified canary batch${executedActions.length === 1 ? "" : "es"}`}
+          </p>
         </Panel>
       </div>
 
@@ -166,8 +202,9 @@ function RecoveryPage() {
         <p className="mt-2 max-w-4xl text-xs leading-relaxed text-destructive/90">
           REVIVE holds no credentials to move money, alter pricing, issue refunds or change payment
           routing. Actions that create financial concessions, initiate refunds or debits, or change
-          customer-facing checkout behaviour are permanently outside the AI&rsquo;s authority and
-          will be routed to a human finance owner once the policy engine ships.
+          customer-facing checkout behaviour are permanently outside the AI&rsquo;s authority. The
+          only executable actions are the two bounded ones below, capped at 50 transactions and run
+          in test mode; anything above the exposure ceiling routes to a human approver.
         </p>
       </div>
 
@@ -231,7 +268,17 @@ function RecoveryPage() {
                       {auditByIncident[incident.code] ?? 0}
                     </td>
                     <td className="py-3">
-                      <Badge tone="warning">awaiting AI</Badge>
+                      {(() => {
+                        const rows = byIncident.get(incident.code) ?? [];
+                        if (rows.length === 0) return <Badge tone="warning">awaiting AI</Badge>;
+                        return (
+                          <div className="flex flex-wrap gap-1.5">
+                            {rows.map((a) => (
+                              <PolicyBadge key={a.actionKey} status={a.policyStatus} />
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
@@ -240,6 +287,24 @@ function RecoveryPage() {
           </div>
         )}
       </Panel>
+
+      {[...byIncident.entries()].map(([code, rows]) => (
+        <div key={code} className="mt-4">
+          <div className="flex items-center gap-2">
+            <Link
+              to="/incidents/$incidentId"
+              params={{ incidentId: code }}
+              className="num text-xs font-semibold text-primary hover:underline"
+            >
+              {code}
+            </Link>
+            <span className="text-xs text-muted-foreground">
+              {incidents.find((i) => i.code === code)?.scopeLabel}
+            </span>
+          </div>
+          <PlaybookPanel incidentCode={code} actions={rows} investigated />
+        </div>
+      ))}
     </AppShell>
   );
 }

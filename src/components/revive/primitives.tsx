@@ -99,10 +99,11 @@ export function PolicyBadge({ status }: { status: PolicyStatus }) {
 }
 
 const execTone: Record<ExecutionStatus, Tone> = {
-  executed: "info",
+  executed: "success",
   verified: "success",
   test_mode: "warning",
   pending: "neutral",
+  rejected: "critical",
   blocked: "critical",
 };
 
