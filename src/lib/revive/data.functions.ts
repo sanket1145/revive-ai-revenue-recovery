@@ -11,13 +11,21 @@
  * "backend down / dataset missing" from "no incidents right now".
  */
 import { createServerFn } from "@tanstack/react-start";
-import { mapAuditEvent, mapIncident, mapIncidentReport, mapOverview, mapSystemMeta } from "./mappers";
+import {
+  mapAuditEvent,
+  mapIncident,
+  mapIncidentReport,
+  mapOverview,
+  mapRecoveryAction,
+  mapSystemMeta,
+} from "./mappers";
 import type {
   AuditEventRecord,
   DataResult,
   IncidentRecord,
   IncidentReport,
   OverviewSnapshot,
+  RecoveryAction,
   SystemMeta,
 } from "./types";
 
@@ -185,6 +193,9 @@ export const getIncidentDetail = createServerFn({ method: "GET" })
           incident: mapIncident(incidentRes.data as Row),
           report: reportPayload ? mapIncidentReport(data.code, reportPayload) : null,
           audit: auditRes.error ? [] : ((auditRes.data ?? []) as Row[]).map(mapAuditEvent),
+          actions: actionsRes.error
+            ? []
+            : ((actionsRes.data ?? []) as Row[]).map(mapRecoveryAction),
           siblings: siblingsRes.error
             ? []
             : ((siblingsRes.data ?? []) as Row[]).map((r) => ({
