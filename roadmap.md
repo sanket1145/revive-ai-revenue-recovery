@@ -27,20 +27,39 @@ narrative from measured values only. No playbook, policy verdict, execution or
 verification record exists yet, so those surfaces render honest "not enabled"
 states rather than mock rows.
 
-## Step 2 — AI investigation (NOT STARTED)
+## Step 2 — AI investigation (COMPLETE)
 
-- Root-cause hypothesis generation over detected incident evidence (Lovable AI gateway)
-- Confidence scoring, evidence citation, affected-segment narrative
-- Persist diagnosis on `incidents` (`root_cause`, `diagnosis`, `confidence`)
-- Multi-scope correlation (one PSP degrading across several methods at once)
+- [x] Root-cause hypothesis over measured ledger aggregates (Lovable AI gateway,
+      `google/gemini-3.7-flash`, strict JSON schema, no free-form numbers)
+- [x] Confidence score + 3-5 cited evidence lines, persisted on `incidents`
+      (`root_cause`, `diagnosis`, `confidence`, `evidence`, `investigated_at`)
+- [x] Explainable recovery-opportunity score (`revive_recovery_score`, 0-100 over
+      five deterministic factors) persisted as `incidents.recovery_score`
+- [x] Rendered inside the existing investigation page — no new pages
 
-## Step 3 — Revenue-at-risk engine, policy engine, recovery execution (NOT STARTED)
+## Step 3 — Recovery playbook, policy engine, canary execution (COMPLETE)
 
-- Playbook proposal engine (bounded action catalogue)
-- Deterministic policy engine: approved / blocked / requires_approval verdicts
-- Test-mode (canary) execution + verification loop
-- Human approval flow for customer-facing actions
-- Full audit trail wiring for every stage
+- [x] Two bounded actions per incident (`revive_propose_recovery`):
+      retry eligible failed payments · recover abandoned/interrupted checkouts
+- [x] Deterministic policy engine: confidence threshold, failure-reason
+      eligibility, per-transaction ceiling, retry limit + cooldown,
+      idempotency guard, exposure ceiling → approved / requires_approval / blocked
+- [x] Human approve/reject gate for customer-facing or high-exposure actions
+- [x] Canary execution capped at 50 transactions, test mode only, outcome
+      derived per transaction from its failure reason (`revive_execute_recovery`)
+- [x] Verification loop: attempted / recovered / failed / recovery rate /
+      remaining revenue at risk, recomputed from the ledger
+- [x] Counterfactual panel: measured shortfall vs measured recovery
+- [x] Every stage written to the append-only audit ledger
+
+Limitations: execution is a Razorpay test-mode simulation against the merchant
+ledger — REVIVE holds no live payment credentials, and per-transaction outcomes
+come from a deterministic recovery-propensity map, not a live PSP response.
+
+## Optional (only if credits remain)
+
+- Mini recovery memory ("a similar UPI incident previously recovered ₹X")
+- Mini chat interface answering "why did revenue drop?" from existing data
 
 ## Backlog / ideas
 
