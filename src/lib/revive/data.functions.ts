@@ -261,20 +261,24 @@ export const getAuditTrail = createServerFn({ method: "GET" }).handler(
 export interface RecoveryPayload {
   meta: SystemMeta;
   incidents: IncidentRecord[];
+  actions: RecoveryAction[];
   auditByIncident: Record<string, number>;
 }
 
-/** Recovery console. Step 1 has no executable actions — only candidates. */
+/** Recovery console: every proposed action with its policy verdict and result. */
 export const getRecoveryQueue = createServerFn({ method: "GET" }).handler(
   async (): Promise<DataResult<RecoveryPayload>> => {
     try {
       const { getPublicSupabase } = await import("./supabase.server");
       const supabase = getPublicSupabase();
 
-      const [{ meta }, incidentsRes, auditRes] = await Promise.all([
+      const [{ meta }, incidentsRes, auditRes, actionsRes] = await Promise.all([
         loadMeta(),
         supabase.from("incidents").select("*").order("revenue_at_risk_paise", { ascending: false }),
         supabase.from("audit_events").select("incident_code"),
+        supabase.from("recovery_actions").select("*").order("expected_recovery_paise", {
+          ascending: false,
+        }),
       ]);
 
       if (incidentsRes.error) throw new Error(incidentsRes.error.message);
@@ -295,6 +299,9 @@ export const getRecoveryQueue = createServerFn({ method: "GET" }).handler(
         data: {
           meta,
           incidents: ((incidentsRes.data ?? []) as Row[]).map(mapIncident),
+          actions: actionsRes.error
+            ? []
+            : ((actionsRes.data ?? []) as Row[]).map(mapRecoveryAction),
           auditByIncident,
         },
       };
