@@ -2,8 +2,15 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Check, Lock, ShieldAlert } from "lucide-react";
 import { AppShell } from "@/components/revive/shell";
-import { Panel, SeverityBadge, StatusBadge, Badge } from "@/components/revive/primitives";
+import {
+  Panel,
+  PolicyBadge,
+  SeverityBadge,
+  StatusBadge,
+  Badge,
+} from "@/components/revive/primitives";
 import { SafetyPipeline } from "@/components/revive/pipeline";
+import { PlaybookPanel } from "@/components/revive/playbook";
 import {
   DataUnavailable,
   EmptyState,
@@ -261,7 +268,17 @@ function RecoveryPage() {
                       {auditByIncident[incident.code] ?? 0}
                     </td>
                     <td className="py-3">
-                      <Badge tone="warning">awaiting AI</Badge>
+                      {(() => {
+                        const rows = byIncident.get(incident.code) ?? [];
+                        if (rows.length === 0) return <Badge tone="warning">awaiting AI</Badge>;
+                        return (
+                          <div className="flex flex-wrap gap-1.5">
+                            {rows.map((a) => (
+                              <PolicyBadge key={a.actionKey} status={a.policyStatus} />
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
@@ -270,6 +287,24 @@ function RecoveryPage() {
           </div>
         )}
       </Panel>
+
+      {[...byIncident.entries()].map(([code, rows]) => (
+        <div key={code} className="mt-4">
+          <div className="flex items-center gap-2">
+            <Link
+              to="/incidents/$incidentId"
+              params={{ incidentId: code }}
+              className="num text-xs font-semibold text-primary hover:underline"
+            >
+              {code}
+            </Link>
+            <span className="text-xs text-muted-foreground">
+              {incidents.find((i) => i.code === code)?.scopeLabel}
+            </span>
+          </div>
+          <PlaybookPanel incidentCode={code} actions={rows} investigated />
+        </div>
+      ))}
     </AppShell>
   );
 }
