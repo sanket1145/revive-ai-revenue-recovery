@@ -61,10 +61,27 @@ function RecoveryPage() {
     );
   }
 
-  const { meta, incidents, auditByIncident } = result.data;
+  const { meta, incidents, actions, auditByIncident } = result.data;
   const open = incidents.filter((i) => i.status !== "recovered");
   const addressable = open.reduce((s, i) => s + i.revenueAtRiskPaise, 0);
   const recovered = incidents.reduce((s, i) => s + i.revenueRecoveredPaise, 0);
+  const executedActions = actions.filter((a) => a.executionStatus === "executed");
+  const anyBlocked = actions.some((a) => a.policyStatus === "blocked");
+  const pipelineStage = executedActions.some((a) => a.verification)
+    ? 5
+    : executedActions.length > 0
+      ? 4
+      : actions.some((a) => a.policyStatus === "approved")
+        ? 2
+        : actions.length > 0
+          ? 1
+          : incidents.some((i) => i.diagnosis)
+            ? 0
+            : -1;
+  const byIncident = new Map<string, typeof actions>();
+  for (const a of actions) {
+    byIncident.set(a.incidentCode, [...(byIncident.get(a.incidentCode) ?? []), a]);
+  }
 
   return (
     <AppShell
@@ -73,7 +90,7 @@ function RecoveryPage() {
       meta={meta}
     >
       <Panel title="Safety workflow">
-        <SafetyPipeline activeIndex={-1} />
+        <SafetyPipeline activeIndex={pipelineStage} blocked={anyBlocked} />
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
           REVIVE AI never executes financial actions directly. Every recommendation is evaluated
           against deterministic policy rules; approved actions run first in bounded test mode, are
@@ -121,15 +138,23 @@ function RecoveryPage() {
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
             Actions proposed
           </p>
-          <p className="num mt-1 text-2xl font-semibold">0</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">recommendation service offline</p>
+          <p className="num mt-1 text-2xl font-semibold">{actions.length}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            across {byIncident.size} investigated incident{byIncident.size === 1 ? "" : "s"}
+          </p>
         </Panel>
         <Panel>
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
             Policy verdicts
           </p>
-          <p className="num mt-1 text-2xl font-semibold">0</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">nothing submitted to the engine</p>
+          <p className="num mt-1 text-2xl font-semibold">
+            {actions.filter((a) => a.policyStatus === "approved").length}
+            <span className="text-sm font-normal text-muted-foreground"> approved</span>
+          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {actions.filter((a) => a.policyStatus === "requires_approval").length} need a human ·{" "}
+            {actions.filter((a) => a.policyStatus === "blocked").length} blocked
+          </p>
         </Panel>
         <Panel>
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
@@ -154,7 +179,11 @@ function RecoveryPage() {
           >
             {formatINR(recovered)}
           </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">no action has been executed</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {executedActions.length === 0
+              ? "no batch has been executed"
+              : `${executedActions.length} verified canary batch${executedActions.length === 1 ? "" : "es"}`}
+          </p>
         </Panel>
       </div>
 
