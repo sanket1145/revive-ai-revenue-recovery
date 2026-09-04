@@ -7,6 +7,7 @@
  */
 import { useState } from "react";
 import { useRouter } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Gauge, Loader2, Sparkles } from "lucide-react";
 import { Badge, Panel } from "@/components/revive/primitives";
@@ -31,6 +32,7 @@ export function DiagnosisPanel({
   className?: string;
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const investigate = useServerFn(investigateIncident);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +43,7 @@ export function DiagnosisPanel({
     try {
       const result = await investigate({ data: { code: incident.code } });
       if (!result.ok) setError(result.reason);
+      await queryClient.invalidateQueries({ queryKey: ["revive"] });
       await router.invalidate();
     } catch (e) {
       setError(e instanceof Error ? e.message : "The investigation could not be completed.");
