@@ -54,7 +54,7 @@ export function DiagnosisPanel({
   return (
     <Panel
       title="AI investigation"
-      className={className}
+      className={className ?? ""}
       action={
         <div className="flex items-center gap-2">
           {incident.confidence !== null && (

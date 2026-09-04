@@ -69,7 +69,7 @@ export const investigateIncident = createServerFn({ method: "POST" })
           root_cause: diagnosis.rootCause,
           diagnosis: diagnosis.diagnosis,
           confidence: diagnosis.confidence,
-          evidence: { points: diagnosis.evidence, score },
+          evidence: JSON.parse(JSON.stringify({ points: diagnosis.evidence, score })),
           recovery_score: score ? Number(score["score"] ?? 0) : null,
           investigated_at: new Date().toISOString(),
           status: incident.status === "detected" ? "investigating" : incident.status,
