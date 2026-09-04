@@ -130,6 +130,7 @@ export interface IncidentDetailPayload {
   incident: IncidentRecord;
   report: IncidentReport | null;
   audit: AuditEventRecord[];
+  actions: RecoveryAction[];
   siblings: { code: string; title: string }[];
 }
 
@@ -143,24 +144,30 @@ export const getIncidentDetail = createServerFn({ method: "GET" })
       const { getPublicSupabase } = await import("./supabase.server");
       const supabase = getPublicSupabase();
 
-      const [{ meta }, incidentRes, reportRes, auditRes, siblingsRes] = await Promise.all([
-        loadMeta(),
-        supabase.from("incidents").select("*").eq("incident_code", data.code).maybeSingle(),
-        supabase
-          .from("incident_reports")
-          .select("payload")
-          .eq("incident_code", data.code)
-          .maybeSingle(),
-        supabase
-          .from("audit_events")
-          .select("*")
-          .eq("incident_code", data.code)
-          .order("occurred_at", { ascending: true }),
-        supabase
-          .from("incidents")
-          .select("incident_code,title")
-          .order("detected_at", { ascending: false }),
-      ]);
+      const [{ meta }, incidentRes, reportRes, auditRes, actionsRes, siblingsRes] =
+        await Promise.all([
+          loadMeta(),
+          supabase.from("incidents").select("*").eq("incident_code", data.code).maybeSingle(),
+          supabase
+            .from("incident_reports")
+            .select("payload")
+            .eq("incident_code", data.code)
+            .maybeSingle(),
+          supabase
+            .from("audit_events")
+            .select("*")
+            .eq("incident_code", data.code)
+            .order("occurred_at", { ascending: true }),
+          supabase
+            .from("recovery_actions")
+            .select("*")
+            .eq("incident_code", data.code)
+            .order("action_key", { ascending: true }),
+          supabase
+            .from("incidents")
+            .select("incident_code,title")
+            .order("detected_at", { ascending: false }),
+        ]);
 
       if (incidentRes.error) throw new Error(incidentRes.error.message);
       if (!meta) return { ok: false, reason: "No dataset has been generated yet." };
