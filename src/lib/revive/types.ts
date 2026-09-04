@@ -24,11 +24,12 @@ export type IncidentStatus =
 /** Policy-engine verdict. Reserved for Step 3. */
 export type PolicyStatus = "approved" | "blocked" | "requires_approval";
 
-/** Execution state of a recovery action. Reserved for Step 3. */
+/** Execution state of a recovery action. */
 export type ExecutionStatus =
   | "executed"
   | "test_mode"
   | "pending"
+  | "rejected"
   | "blocked"
   | "verified";
 
@@ -68,10 +69,71 @@ export interface IncidentRecord {
 
   detectionRule: string;
 
-  /** Populated by the AI investigation service in Step 2. */
+  /** Populated by the AI investigation service (Step 2). */
   rootCause: string | null;
   diagnosis: string | null;
   confidence: number | null;
+  evidence: EvidencePoint[];
+  recoveryScore: number | null;
+  scoreDetail: RecoveryScore | null;
+  investigatedAt: string | null;
+}
+
+/** One cited, data-backed evidence line produced by the investigation model. */
+export interface EvidencePoint {
+  signal: string;
+  detail: string;
+}
+
+export interface ScoreFactor {
+  label: string;
+  points: number;
+  max: number;
+}
+
+/** Explainable recovery-opportunity score (0–100), computed deterministically. */
+export interface RecoveryScore {
+  score: number;
+  eligibleTransactions: number;
+  eligiblePaise: number;
+  expectedRecoveryPaise: number;
+  factors: ScoreFactor[];
+}
+
+export interface PolicyCheck {
+  check: string;
+  status: "pass" | "warn" | "fail";
+  detail: string;
+}
+
+export interface RecoveryVerification {
+  attempted: number;
+  succeeded: number;
+  failed: number;
+  batchValuePaise: number;
+  recoveredPaise: number;
+  recoveryRatePct: number;
+  mode: string;
+}
+
+/** A bounded recovery action proposed for one incident. */
+export interface RecoveryAction {
+  incidentCode: string;
+  actionKey: string;
+  title: string;
+  reason: string;
+  eligibleTransactions: number;
+  eligiblePaise: number;
+  expectedRecoveryPaise: number;
+  policyStatus: PolicyStatus;
+  policyChecks: PolicyCheck[];
+  executionStatus: ExecutionStatus;
+  canaryLimit: number;
+  attempted: number;
+  recovered: number;
+  recoveredPaise: number;
+  executedAt: string | null;
+  verification: RecoveryVerification | null;
 }
 
 export interface AuditEventRecord {
