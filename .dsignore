@@ -1,0 +1,6 @@
+src/components/revive/**
+src/lib/revive/**
+src/integrations/**
+src/lib/error-capture.ts
+src/lib/error-page.ts
+src/lib/lovable-error-reporting.ts
