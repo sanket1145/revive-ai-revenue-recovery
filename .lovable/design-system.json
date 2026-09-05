@@ -2,7 +2,7 @@
   "meta": {
     "name": "Revive Command",
     "package": "@ws-zj1a17lzswqztkqbpkcc/4da665d1-c0e1-4dd8-ac2e-87c9f65f0928",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "framework": "react",
     "css_framework": "tailwind",
     "starter_template": "custom_design_system",
@@ -15,7 +15,7 @@
       ".dsignore": "091a7f2f56bb60f74b48ad4d8d933628",
       ".github/workflows/webpack.yml": "3dc29a3b8e3511cade992016b21b92d6",
       ".gitignore": "6d9e901a692b46a83707c245fb03bc91",
-      ".lovable/meta.yaml": "5a2373b91d18ce168dfa059d91d7bfbf",
+      ".lovable/meta.yaml": "8794970d6049858cc148d2b86f7a2b22",
       ".lovable/project.json": "970b40e5bde7e7161994617aee05b64d",
       ".lovable/sources.yaml": "e616577ff29266d6df58933eb5041590",
       ".lovable/system.md": "d0090f9887bffd3851c56c44cb94e069",
