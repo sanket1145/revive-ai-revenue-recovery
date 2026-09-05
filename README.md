@@ -1,4 +1,4 @@
-# REVIVE AI — Revenue Incident Commander
+# REVIVE - AI Revenue Incident Commander
 
 Merchant-level revenue incident command centre for Indian payments (Razorpay
 AI Revenue Recovery track). REVIVE detects sudden payment success-rate
