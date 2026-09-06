@@ -1,6 +1,12 @@
-# REVIVE - AI Revenue Incident Commander
+# REVIVE — AI Revenue Incident Commander
+
+**Live demo:** https://revive-ai-revenue-incident-commander.lovable.app
 
 Merchant-level revenue incident command centre for Indian payments (Razorpay
+AI Revenue Recovery track). REVIVE detects sudden payment success-rate
+degradation, investigates the root cause with AI over measured ledger data,
+quantifies the revenue at risk, and recommends bounded recovery actions that
+must pass a deterministic policy engine before any test-mode execution.
 AI Revenue Recovery track). REVIVE detects sudden payment success-rate
 degradation, investigates the root cause with AI over measured ledger data,
 quantifies the revenue at risk, and recommends bounded recovery actions that
@@ -104,21 +110,46 @@ outage, an e-NACH batch rejection, and a resolved netbanking PSP outage.
 The detector recovers all four at the correct scope with zero false
 positives across 96 windows × 4 scopes.
 
-## Setup
+## Run locally
 
-Prerequisites: Node.js 20+ (or Bun).
+Prerequisites: Node.js 20+ (or [Bun](https://bun.sh)).
 
 ```sh
-git clone <repo-url>
+# 1. Clone the repo
+git clone https://github.com/<your-username>/revive-ai-revenue-recovery.git
 cd revive-ai-revenue-recovery
+
+# 2. Install dependencies
 bun install        # or: npm install
-bun run dev        # or: npm run dev
+
+# 3. Configure the backend connection
+cp .env.example .env   # then fill in the values below
 ```
 
-Environment variables (Supabase URL + publishable key) are supplied by the
-hosting environment; on Lovable they are injected automatically. See
-`.env.example`-style placeholders — no secrets are committed to this
-repository.
+`.env` needs three values from your Supabase project (Project Settings → API):
+
+```sh
+VITE_SUPABASE_PROJECT_ID="<project-ref>"
+VITE_SUPABASE_URL="https://<project-ref>.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY="<publishable-anon-key>"
+```
+
+Only **publishable/anon** keys are used in the frontend — never commit a
+service-role key. `.env` is git-ignored.
+
+```sh
+# 4. Seed the database (run once, in the Supabase SQL editor or psql)
+select public.revive_generate_dataset();     -- 96,622 deterministic attempts
+select public.revive_detect_incidents();     -- detection sweep → 4 incidents
+select public.revive_refresh_projections();  -- read projections for the UI
+
+# 5. Start the dev server
+bun run dev        # or: npm run dev  →  http://localhost:8080
+```
+
+The migrations under `supabase/` create the schema, RLS policies and the SQL
+functions above; apply them before step 4 if you're starting from an empty
+project.
 
 ## Limitation
 
