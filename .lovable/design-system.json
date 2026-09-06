@@ -2,7 +2,7 @@
   "meta": {
     "name": "Revive Command",
     "package": "@ws-zj1a17lzswqztkqbpkcc/4da665d1-c0e1-4dd8-ac2e-87c9f65f0928",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "framework": "react",
     "css_framework": "tailwind",
     "starter_template": "custom_design_system",
@@ -29,7 +29,7 @@
       "docs/detection-rule.md": "43cf259a03c02e7d675b547621a353fa",
       "eslint.config.js": "345bdd57e188e0e4525edcd00e5003f5",
       "lovable.toml": "b32568cbef680de9cbb176344986f1a3",
-      "package.json": "07af0b9bcd8fe7fdde7155a1b67af8e4",
+      "package.json": "94cdd78f16567f9ffe730da392e3ce08",
       "public/favicon.png": "3ea2b1b5bd85112e5da2f9b854004970",
       "public/robots.txt": "f9dff89adf98833e676de2205921996a",
       "roadmap.md": "d9b7509e55f3784a6270e26d1215737e",
